@@ -1,15 +1,15 @@
 import json
 from django.db.models import Q
 from django.http import JsonResponse
+from rest_framework.decorators import api_view
 from django.contrib.auth import authenticate, logout
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.views import APIView
 from users.models import User
 
 
-# Create your views here.
-
 @csrf_exempt
-def register(request, **kwargs):
+def register(request):
     if request.method == 'POST':
         data = json.loads(request.body.decode('utf-8'))
         # 获取参数
@@ -58,7 +58,7 @@ def register(request, **kwargs):
 
 
 @csrf_exempt
-def login(request, **kwargs):
+def login(request):
     if request.method == 'POST':
         data = json.loads(request.body.decode('utf-8'))
         # 获取参数
@@ -109,3 +109,14 @@ def login(request, **kwargs):
             'data': {'success': False},
             'msg': '被禁止的请求'
         })
+
+
+class UserView(APIView):
+
+    def post(self, request):
+        return JsonResponse({
+                    'code': 200,
+                    'data': {'success': True},
+                    'msg': '测试成功'
+                })
+
