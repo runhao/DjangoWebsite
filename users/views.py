@@ -1,10 +1,9 @@
 import json
+import requests
 from django.db.models import Q
 from django.http import JsonResponse
-from rest_framework.decorators import api_view
 from django.contrib.auth import authenticate, logout
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.views import APIView
 from users.models import User
 
 
@@ -75,9 +74,15 @@ def login(request):
             if user:
                 # 用户已激活
                 if user.is_active:
+                    url = f"{request.scheme}://{request.get_host()}/api/token/"
+                    data = json.loads(requests.post(url, data={"username": username, "password": password}).content)
                     return JsonResponse({
                         'code': 200,
-                        'data': {'success': True},
+                        'data': {
+                            'success': True,
+                            'access': data["access"],
+                            'refresh': data["refresh"],
+                            },
                         'msg': '登录成功'
                     })
                 # 未激活
@@ -109,14 +114,4 @@ def login(request):
             'data': {'success': False},
             'msg': '被禁止的请求'
         })
-
-
-class UserView(APIView):
-
-    def post(self, request):
-        return JsonResponse({
-                    'code': 200,
-                    'data': {'success': True},
-                    'msg': '测试成功'
-                })
 

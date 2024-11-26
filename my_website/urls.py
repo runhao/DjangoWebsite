@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.conf.urls import include
 from django.urls import path
 from users import views as users_views
+from openai.views import ApiKeyView
 
 # 导入 simplejwt 提供的几个验证视图类
 from rest_framework_simplejwt.views import (
@@ -44,6 +45,6 @@ urlpatterns = [
     # 用户注册
     path('api/user/register', users_views.register),
     #
-    path('test', users_views.UserView.as_view()),
+    path('api/openai/key', ApiKeyView.as_view()),
 ]
 
