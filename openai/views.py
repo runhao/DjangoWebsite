@@ -14,7 +14,7 @@ class ApiKeyView(APIView):
                 'code': 200,
                 'data': {
                     'success': True,
-                    'code': records[0].code,
+                    'value': records[0].code,
                 },
                 'msg': ''
             })
