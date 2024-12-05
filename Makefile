@@ -16,6 +16,7 @@ login:
 # Build the Docker image
 .PHONY: build
 build:
+	docker buildx rm $(BUILDX_IMAGE_NAME) || { echo "Cleanup None"; }
 	docker buildx create --name $(BUILDX_IMAGE_NAME) --use
 	docker buildx inspect --bootstrap
 	docker buildx build --platform linux/arm64 -t $(FULL_IMAGE_NAME) . --load || { echo "Build failed"; exit 1; }
