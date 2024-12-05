@@ -29,6 +29,7 @@ push:
 .PHONY: clean
 clean:
 	docker buildx rm $(BUILDX_IMAGE_NAME) || { echo "Cleanup failed"; exit 1; }
+	docker rmi $(docker images -f "dangling=true" -q)
 
 # Run all tasks: login, build, push and clean
 .PHONY: all
