@@ -8,15 +8,15 @@ class ApiKeyView(APIView):
 
     @staticmethod
     def post(request):
-        record = OpenAiKey.objects.filter(active=True)
-        if record:
+        records = OpenAiKey.objects.filter(active=True)
+        if records:
             return JsonResponse({
                 'code': 200,
                 'data': {
                     'success': True,
-                    'code': record[0].code,
+                    'code': records[0].code,
                 },
-                'msg': '测试成功'
+                'msg': ''
             })
         return JsonResponse({
                 'code': 202,
