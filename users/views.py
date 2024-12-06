@@ -3,7 +3,7 @@ import requests
 from django.utils import timezone
 from django.db.models import Q
 from django.http import JsonResponse
-from django.contrib.auth import authenticate, logout
+from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
 from users.models import User
 
@@ -11,115 +11,85 @@ from users.models import User
 @csrf_exempt
 def register(request):
     if request.method == 'POST':
-        data = json.loads(request.body.decode('utf-8'))
-        # 获取参数
-        username = data.get('username', '')
-        password = data.get('password', '')
-        email = data.get('email', '')
-        mobile = data.get('phone', '')
-        return user_register(username, password, email, mobile)
-    else:
-        return JsonResponse({
-            'code': 403,
-            'data': {'success': False},
-            'msg': '被禁止的请求'
-        })
+        data = parse_json_request(request)
+        return user_register(
+            username=data.get('username', ''),
+            password=data.get('password', ''),
+            email=data.get('email', ''),
+            mobile=data.get('phone', '')
+        )
+    return forbidden_response()
 
 
 @csrf_exempt
 def login(request):
     if request.method == 'POST':
-        data = json.loads(request.body.decode('utf-8'))
-        # 获取参数
-        name = data.get('name', '')
-        password = data.get('password', '')
-        user_login(request, name, password)
-    else:
-        return JsonResponse({
-            'code': 403,
-            'data': {'success': False},
-            'msg': '被禁止的请求'
-        })
+        data = parse_json_request(request)
+        return user_login(request, name=data.get('name', ''), password=data.get('password', ''))
+    return forbidden_response()
+
+
+def parse_json_request(request):
+    return json.loads(request.body.decode('utf-8'))
+
+
+def forbidden_response():
+    return JsonResponse({
+        'code': 403,
+        'data': {'success': False},
+        'msg': '被禁止的请求'
+    })
 
 
 def user_register(username, password, email, mobile):
     if not (password and email and mobile):
-        return JsonResponse({
-            'code': 201,
-            'data': {'success': False},
-            'msg': '请填写完整信息！'
-        })
-    # 用户已存在
-    if User.objects.filter(Q(email=email) | Q(mobile=mobile)):
-        return JsonResponse({
-            'code': 200,
-            'data': {'success': False},
-            'msg': '用户信息重复'
-        })
-    # 用户不存在
-    else:
-        # 使用User内置方法创建用户
-        user = User.objects.create_user(
-            username=username,
-            password=password,
-            email=email,
-            mobile=mobile,
-            is_staff=1,
-            is_active=1,
-            is_superuser=0
-        )
+        return json_response(201, False, '请填写完整信息！')
 
-        return JsonResponse({
-            'code': 200,
-            'data': {'success': True, 'username': user.username},
-            'msg': '用户注册成功'
-        })
+    if User.objects.filter(Q(email=email) | Q(mobile=mobile)).exists():
+        return json_response(200, False, '用户信息重复')
+
+    user = User.objects.create_user(
+        username=username,
+        password=password,
+        email=email,
+        mobile=mobile,
+        is_staff=True,
+        is_active=True,
+        is_superuser=False
+    )
+
+    return json_response(200, True, '用户注册成功', {'username': user.username})
 
 
 def user_login(request, name, password):
-    # 用户已存在
-    user = User.objects.filter(Q(email=name) | Q(mobile=name))
-    if user:
-        # 使用内置方法验证
-        username = list(user.values("username"))[0]["username"]
-        user = authenticate(username=username, password=password)
-        # 验证通过
-        if user:
-            # 用户已激活
-            if user.is_active:
-                url = f"{request.scheme}://{request.get_host()}/api/token/"
-                data = json.loads(requests.post(url, data={"username": username, "password": password}).content)
-                user.last_login = timezone.now()
-                user.save()
-                return JsonResponse({
-                    'code': 200,
-                    'data': {
-                        'success': True,
-                        'access': data["access"],
-                        'refresh': data["refresh"],
-                    },
-                    'msg': '登录成功'
-                })
-            # 未激活
-            else:
-                return JsonResponse({
-                    'code': 200,
-                    'data': {'success': False},
-                    'msg': '用户未激活'
-                })
+    try:
+        user = User.objects.get(Q(email=name) | Q(mobile=name))
+    except User.DoesNotExist:
+        return json_response(200, False, '用户不存在')
 
-        # 验证失败
-        else:
-            return JsonResponse({
-                'code': 403,
-                'data': {'success': False},
-                'msg': '用户认证失败'
-            })
+    user = authenticate(username=user.username, password=password)
+    if user is None:
+        return json_response(403, False, '用户认证失败')
 
-    # 用户不存在
-    else:
-        return JsonResponse({
-            'code': 200,
-            'data': {'success': False},
-            'msg': '用户不存在'
-        })
+    if not user.is_active:
+        return json_response(200, False, '用户未激活')
+
+    url = f"{request.scheme}://{request.get_host()}/api/token/"
+    response = requests.post(url, data={"username": user.username, "password": password})
+    data = response.json()
+
+    user.last_login = timezone.now()
+    user.save()
+
+    return json_response(200, True, '登录成功', {'access': data["access"], 'refresh': data["refresh"]})
+
+
+def json_response(code, success, msg, extra_data=None):
+    response_data = {
+        'code': code,
+        'data': {'success': success}
+    }
+    if extra_data:
+        response_data['data'].update(extra_data)
+    response_data['msg'] = msg
+    return JsonResponse(response_data)
