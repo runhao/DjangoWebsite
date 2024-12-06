@@ -1,5 +1,6 @@
 import json
 import requests
+from django.utils import timezone
 from django.db.models import Q
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, logout
@@ -76,6 +77,8 @@ def login(request):
                 if user.is_active:
                     url = f"{request.scheme}://{request.get_host()}/api/token/"
                     data = json.loads(requests.post(url, data={"username": username, "password": password}).content)
+                    user.last_login = timezone.now()
+                    user.save()
                     return JsonResponse({
                         'code': 200,
                         'data': {
