@@ -9,6 +9,7 @@ class OpenAiKey(models.Model):
 
     active = models.BooleanField(default=True, verbose_name="状态")
     code = models.CharField(unique=True, verbose_name="API KEY")
+    api_type = models.CharField(verbose_name="API类型")
     quota = models.FloatField(verbose_name="总额度", default=0)
     usage = models.FloatField(verbose_name="已使用额度", default=0)
     remaining_balance = models.FloatField(verbose_name="剩余额度", editable=False, default=0)  # 新增字段
