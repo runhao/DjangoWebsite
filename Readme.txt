@@ -1,0 +1,1 @@
+基于Django、uwsgi、reids, celery的个人网站

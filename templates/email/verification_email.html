@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册验证码</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007BFF;
+            margin-bottom: 20px;
+        }
+
+        .content {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .code {
+            font-size: 20px;
+            font-weight: bold;
+            color: #007BFF;
+            margin: 20px 0;
+        }
+
+        .footer {
+            font-size: 14px;
+            color: #777;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <div class="header">欢迎光临脑洞制造</div>
+    <div class="content">
+        <p>尊敬的用户，您好！</p>
+        <p>您正在进行<u>{{ action|default:"&nbsp;&nbsp;&nbsp;&nbsp;" }}</u>操作，请保管好您的验证码：</p>
+        <div class="code"><u>{{ code|default:"&nbsp;&nbsp;&nbsp;&nbsp;" }}</u></div>
+        <p>该验证码有效期为5分钟，请尽快使用。</p>
+    </div>
+    <div class="footer">
+        <p>如果您未进行此操作，请忽略此邮件。</p>
+        <p>感谢您的使用！</p>
+    </div>
+</div>
+</body>
+</html>
