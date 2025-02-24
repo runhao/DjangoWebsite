@@ -17,4 +17,4 @@ celery -A my_website beat --loglevel=INFO&
 celery -A my_website worker --loglevel=INFO --logfile=worker.log
 
 # 防止退出
-#tail -f /dev/null
+tail -f /dev/null
